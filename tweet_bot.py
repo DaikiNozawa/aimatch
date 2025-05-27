@@ -37,27 +37,17 @@ def authenticate_google_sheets():
     return service
 
 def get_current_time_slot():
-    """現在の時間帯を取得"""
+    """現在の時間帯を取得（デバッグ版：常に現在の時間に対応する時間帯を返す）"""
     now = datetime.now(JST)
-    weekday = now.weekday()  # 0=月曜日, 6=日曜日
     hour = now.hour
     
-    # 平日（月-金）
-    if weekday < 5:
-        if 7 <= hour < 9:
-            return "平日朝"
-        elif 11 <= hour < 13:
-            return "平日昼"
-        elif 20 <= hour < 22:
-            return "平日夜"
-    # 土日
+    # デバッグ用：時間に応じて適切な時間帯を返す
+    if hour < 12:
+        return "朝"
+    elif hour < 18:
+        return "昼"
     else:
-        if 9 <= hour < 11:
-            return "週末朝"
-        elif 19 <= hour < 21:
-            return "週末夜"
-    
-    return None
+        return "夜"
 
 def get_today_theme():
     """曜日別テーマを取得"""
