@@ -31,7 +31,7 @@ def authenticate_google_sheets():
     """Google Sheets APIの認証"""
     credentials = service_account.Credentials.from_service_account_info(
         GOOGLE_CREDENTIALS,
-        scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
+        scopes=['https://www.googleapis.com/auth/spreadsheets']
     )
     service = build('sheets', 'v4', credentials=credentials)
     return service
