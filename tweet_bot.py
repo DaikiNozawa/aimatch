@@ -67,7 +67,7 @@ def get_tweet_from_sheet(service, time_slot, theme):
     """スプレッドシートから投稿内容を取得"""
     try:
         # A列：投稿日時、B列：テーマ、C列：投稿内容、D列：投稿済みフラグ、E列：画像URL（オプション）
-        range_name = 'シート1!A:E'
+        range_name = 'Sheet1!A:E'
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
             range=range_name
@@ -118,7 +118,7 @@ def get_tweet_from_sheet(service, time_slot, theme):
 def mark_as_posted(service, row_number):
     """投稿済みフラグを更新"""
     try:
-        range_name = f'シート1!D{row_number}'
+        range_name = f'Sheet1!D{row_number}'
         body = {'values': [['済']]}
         
         service.spreadsheets().values().update(
@@ -129,7 +129,7 @@ def mark_as_posted(service, row_number):
         ).execute()
         
         # 投稿日時も記録
-        timestamp_range = f'シート1!F{row_number}'
+        timestamp_range = f'Sheet1!F{row_number}'
         timestamp_body = {'values': [[datetime.now(JST).strftime('%Y/%m/%d %H:%M:%S')]]}
         
         service.spreadsheets().values().update(
