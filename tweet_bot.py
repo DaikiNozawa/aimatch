@@ -37,17 +37,27 @@ def authenticate_google_sheets():
     return service
 
 def get_current_time_slot():
-    """現在の時間帯を取得（デバッグ版：常に現在の時間に対応する時間帯を返す）"""
+    """現在の時間帯を取得"""
     now = datetime.now(JST)
+    weekday = now.weekday()  # 0=月曜日, 6=日曜日
     hour = now.hour
     
-    # デバッグ用：時間に応じて適切な時間帯を返す
-    if hour < 12:
-        return "朝"
-    elif hour < 18:
-        return "昼"
+    # 平日（月-金）
+    if weekday < 5:
+        if 7 <= hour < 9:
+            return "朝"
+        elif 11 <= hour < 13:
+            return "昼"
+        elif 20 <= hour < 22:
+            return "夜"
+    # 土日
     else:
-        return "夜"
+        if 9 <= hour < 11:
+            return "朝"
+        elif 19 <= hour < 21:
+            return "夜"
+    
+    return None
 
 def get_today_theme():
     """曜日別テーマを取得"""
@@ -79,34 +89,41 @@ def get_tweet_from_sheet(service, time_slot, theme):
             print("スプレッドシートにデータがありません")
             return None, None, None
         
-        # 現在の日付
-        today = datetime.now(JST).strftime('%Y/%m/%d')
+        # 現在の日付と時間帯
+        now = datetime.now(JST)
+        today = now.strftime('%Y/%m/%d')
+        
+        print(f"検索条件 - 日付: {today}, 時間帯: {time_slot}, テーマ: {theme}")
         
         # 該当する投稿を検索
         for i, row in enumerate(values[1:], start=2):  # ヘッダー行をスキップ
             if len(row) >= 3:
-                scheduled_date = row[0] if row[0] else ""
+                scheduled_date_str = row[0] if row[0] else ""
                 scheduled_theme = row[1] if row[1] else ""
                 content = row[2] if row[2] else ""
                 is_posted = row[3] if len(row) > 3 else ""
                 image_url = row[4] if len(row) > 4 else ""
                 
-                # 投稿済みでない、今日の日付、現在の時間帯に該当する投稿を探す
-                if (scheduled_date == today and 
-                    time_slot in scheduled_date and 
+                # 日付と時間帯の一致を確認（例: "2025/05/28 朝"）
+                if (f"{today} {time_slot}" == scheduled_date_str and 
                     scheduled_theme == theme and 
                     is_posted != "済"):
+                    print(f"該当する投稿を発見: 行{i}")
                     return content, i, image_url
         
         # 予備の投稿を探す（日付指定なし、テーマが一致、未投稿）
+        print("日付指定の投稿が見つからないため、予備投稿を検索")
         for i, row in enumerate(values[1:], start=2):
             if len(row) >= 3:
+                scheduled_date_str = row[0] if row[0] else ""
                 scheduled_theme = row[1] if row[1] else ""
                 content = row[2] if row[2] else ""
                 is_posted = row[3] if len(row) > 3 else ""
                 image_url = row[4] if len(row) > 4 else ""
                 
-                if scheduled_theme == theme and is_posted != "済" and content:
+                # 日付指定がない投稿を予備として使用
+                if not scheduled_date_str and scheduled_theme == theme and is_posted != "済" and content:
+                    print(f"予備投稿を発見: 行{i}")
                     return content, i, image_url
         
         return None, None, None
@@ -139,13 +156,17 @@ def mark_as_posted(service, row_number):
             body=timestamp_body
         ).execute()
         
+        print(f"行{row_number}を投稿済みに更新しました")
+        
     except Exception as e:
         print(f"投稿済みフラグ更新エラー: {e}")
 
-def post_tweet(client, content, image_url=None):
+def post_tweet(client, content):
     """ツイートを投稿"""
     try:
-        # 画像がある場合の処理（今回は基本テキストのみ）
+        # 改行文字の処理
+        content = content.replace('\\n', '\n')
+        
         response = client.create_tweet(text=content)
         return response.data['id']
     except Exception as e:
@@ -179,10 +200,10 @@ def main():
         print("投稿する内容が見つかりませんでした")
         return
     
-    print(f"投稿内容: {tweet_content}")
+    print(f"投稿内容: {tweet_content[:50]}...")  # 最初の50文字を表示
     
     # ツイートを投稿
-    tweet_id = post_tweet(twitter_client, tweet_content, image_url)
+    tweet_id = post_tweet(twitter_client, tweet_content)
     
     if tweet_id:
         print(f"投稿成功！ Tweet ID: {tweet_id}")
