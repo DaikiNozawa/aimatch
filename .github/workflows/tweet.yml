@@ -2,16 +2,16 @@ name: X Auto Tweet Bot
 
 on:
   schedule:
-    # 平日朝8時（UTC 23:00）
-    - cron: '0 23 * * 0-4'
-    # 平日昼12時（UTC 3:00）
-    - cron: '0 3 * * 1-5'
-    # 平日夜21時（UTC 12:00）
-    - cron: '0 12 * * 1-5'
-    # 土日朝10時（UTC 1:00）
-    - cron: '0 1 * * 0,6'
-    # 土日夜20時（UTC 11:00）
-    - cron: '0 11 * * 0,6'
+    # 平日朝8:30 (JST) = 23:30 (UTC前日)
+    - cron: '30 23 * * 0-4'
+    # 平日昼12:30 (JST) = 03:30 (UTC)
+    - cron: '30 3 * * 1-5'
+    # 平日夜20:30 (JST) = 11:30 (UTC)
+    - cron: '30 11 * * 1-5'
+    # 土日朝10:30 (JST) = 01:30 (UTC)
+    - cron: '30 1 * * 6,0'
+    # 土日夜20:30 (JST) = 11:30 (UTC)
+    - cron: '30 11 * * 6,0'
   
   # 手動実行用
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v4
