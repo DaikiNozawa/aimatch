@@ -1,5 +1,4 @@
 name: X Auto Tweet Bot
-
 on:
   schedule:
     # 平日朝8:30 (JST) = 23:30 (UTC前日)
@@ -15,7 +14,6 @@ on:
   
   # 手動実行用
   workflow_dispatch:
-
 jobs:
   tweet:
     runs-on: ubuntu-latest
